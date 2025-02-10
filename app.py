@@ -32,12 +32,15 @@ if uploaded_file:
     else:
         text_column = st.selectbox("Select the column with property descriptions", df.columns)
 
+    # Drop missing values to ensure matching lengths
+    df = df.dropna(subset=[text_column]).reset_index(drop=True)
+
     # Process descriptions
     if st.button("Analyze Descriptions"):
         entity_results = []
         sentiment_results = []
 
-        for text in df[text_column].dropna():
+        for text in df[text_column]:
             doc = nlp(text)  # Tokenize text using spaCy's blank model
             entities = [(ent.text, ent.label_) for ent in doc.ents]  # No named entity recognition (NER)
             sentiment = TextBlob(text).sentiment.polarity  # Sentiment analysis
@@ -45,6 +48,7 @@ if uploaded_file:
             entity_results.append(entities)
             sentiment_results.append(sentiment)
 
+        # Ensure the lengths match before assigning to the DataFrame
         df["Entities"] = entity_results
         df["Sentiment"] = sentiment_results
 
@@ -55,4 +59,3 @@ if uploaded_file:
         st.download_button("Download Processed Data", csv_data, "airbnb_nlp_results.csv", "text/csv")
 
 st.write("Upload an Airbnb dataset with textual property descriptions to analyze entities and sentiment!")
-
