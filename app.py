@@ -17,10 +17,8 @@ from textblob import TextBlob
 def load_spacy_model():
     model_name = "en_core_web_sm"
     try:
-        # Try loading the model
         return spacy.load(model_name)
     except OSError:
-        # If model is missing, download it
         st.warning(f"Downloading missing spaCy model: {model_name}. This may take a moment...")
         subprocess.run(["python", "-m", "spacy", "download", model_name], check=True)
         return spacy.load(model_name)
@@ -29,13 +27,20 @@ def load_spacy_model():
 st.title("Airbnb Listing NLP Analyzer")
 
 # File uploader
-uploaded_file = st.file_uploader("Upload Airbnb Listings CSV", type="csv")
+uploaded_file = st.file_uploader("Upload Airbnb Listings CSV", type=["csv", "gz"])
 
 if uploaded_file:
-    df = pd.read_csv(uploaded_file)
+    # Determine file type and read accordingly
+    if uploaded_file.name.endswith('.gz'):
+        df = pd.read_csv(uploaded_file, compression='gzip')
+    else:
+        df = pd.read_csv(uploaded_file)
 
-    # Select column for analysis
-    text_column = st.selectbox("Select the column with property descriptions", df.columns)
+    # Use "description" as default column
+    if "description" in df.columns:
+        text_column = "description"
+    else:
+        text_column = st.selectbox("Select the column with property descriptions", df.columns)
 
     # Load spaCy model after file upload (to reduce startup time)
     nlp = load_spacy_model()
@@ -59,7 +64,7 @@ if uploaded_file:
 
         # Display results
         st.write("### Processed Data:")
-        st.dataframe(df)
+        st.dataframe(df[["description", "Entities", "Sentiment"]])
 
         # Option to download results
         csv_data = df.to_csv(index=False).encode('utf-8')
