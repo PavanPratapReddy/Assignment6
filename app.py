@@ -13,12 +13,17 @@ import spacy
 import subprocess
 from textblob import TextBlob
 
-# Ensure the spaCy model is available
-try:
-    nlp = spacy.load("en_core_web_sm")
-except OSError:
-    subprocess.run(["python", "-m", "spacy", "download", "en_core_web_sm"])
-    nlp = spacy.load("en_core_web_sm")
+# Function to ensure spaCy model is installed
+def load_spacy_model():
+    model_name = "en_core_web_sm"
+    try:
+        # Try loading the model
+        return spacy.load(model_name)
+    except OSError:
+        # If model is missing, download it
+        st.warning(f"Downloading missing spaCy model: {model_name}. This may take a moment...")
+        subprocess.run(["python", "-m", "spacy", "download", model_name], check=True)
+        return spacy.load(model_name)
 
 # Streamlit App
 st.title("Airbnb Listing NLP Analyzer")
@@ -31,6 +36,9 @@ if uploaded_file:
 
     # Select column for analysis
     text_column = st.selectbox("Select the column with property descriptions", df.columns)
+
+    # Load spaCy model after file upload (to reduce startup time)
+    nlp = load_spacy_model()
 
     # Process descriptions
     if st.button("Analyze Descriptions"):
