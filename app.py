@@ -53,5 +53,3 @@ if uploaded_file:
         st.download_button("Download Processed Data", "airbnb_nlp_results.csv")
 
 st.write("Upload an Airbnb dataset with textual property descriptions to analyze entities and sentiment!")
-
-pip install streamlit
