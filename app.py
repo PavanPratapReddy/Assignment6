@@ -10,18 +10,13 @@ Original file is located at
 import streamlit as st
 import pandas as pd
 import spacy
-import subprocess
 from textblob import TextBlob
 
-# Function to ensure spaCy model is installed
-def load_spacy_model():
-    model_name = "en_core_web_sm"
-    try:
-        return spacy.load(model_name)
-    except OSError:
-        st.warning(f"Downloading missing spaCy model: {model_name}. This may take a moment...")
-        subprocess.run(["python", "-m", "spacy", "download", model_name], check=True)
-        return spacy.load(model_name)
+# Load spaCy model (assumes it's preinstalled)
+try:
+    nlp = spacy.load("en_core_web_sm")
+except OSError:
+    st.error("Error: spaCy model 'en_core_web_sm' is missing. Ensure it is installed in requirements.txt.")
 
 # Streamlit App
 st.title("Airbnb Listing NLP Analyzer")
@@ -30,20 +25,15 @@ st.title("Airbnb Listing NLP Analyzer")
 uploaded_file = st.file_uploader("Upload Airbnb Listings CSV", type=["csv", "gz"])
 
 if uploaded_file:
-    # Determine file type and read accordingly
     if uploaded_file.name.endswith('.gz'):
         df = pd.read_csv(uploaded_file, compression='gzip')
     else:
         df = pd.read_csv(uploaded_file)
 
-    # Use "description" as default column
     if "description" in df.columns:
         text_column = "description"
     else:
         text_column = st.selectbox("Select the column with property descriptions", df.columns)
-
-    # Load spaCy model after file upload (to reduce startup time)
-    nlp = load_spacy_model()
 
     # Process descriptions
     if st.button("Analyze Descriptions"):
@@ -58,17 +48,13 @@ if uploaded_file:
             entity_results.append(entities)
             sentiment_results.append(sentiment)
 
-        # Add results to DataFrame
         df["Entities"] = entity_results
         df["Sentiment"] = sentiment_results
 
-        # Display results
         st.write("### Processed Data:")
         st.dataframe(df[["description", "Entities", "Sentiment"]])
 
-        # Option to download results
         csv_data = df.to_csv(index=False).encode('utf-8')
         st.download_button("Download Processed Data", csv_data, "airbnb_nlp_results.csv", "text/csv")
 
 st.write("Upload an Airbnb dataset with textual property descriptions to analyze entities and sentiment!")
-
