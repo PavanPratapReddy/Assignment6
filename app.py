@@ -10,18 +10,10 @@ Original file is located at
 import streamlit as st
 import pandas as pd
 import spacy
-import textblob
 from textblob import TextBlob
 
-# Function to download and load spaCy model
-def load_spacy_model():
-    try:
-        return spacy.load("en_core_web_sm")
-    except OSError:
-        st.warning("Downloading missing spaCy model. This may take a moment...")
-        from spacy.cli import download
-        download("en_core_web_sm")
-        return spacy.load("en_core_web_sm")
+# Use spaCy's blank English model to avoid installation issues
+nlp = spacy.blank("en")
 
 # Streamlit App
 st.title("Airbnb Listing NLP Analyzer")
@@ -40,18 +32,15 @@ if uploaded_file:
     else:
         text_column = st.selectbox("Select the column with property descriptions", df.columns)
 
-    # Load spaCy model after file upload
-    nlp = load_spacy_model()
-
     # Process descriptions
     if st.button("Analyze Descriptions"):
         entity_results = []
         sentiment_results = []
 
         for text in df[text_column].dropna():
-            doc = nlp(text)
-            entities = [(ent.text, ent.label_) for ent in doc.ents]
-            sentiment = TextBlob(text).sentiment.polarity
+            doc = nlp(text)  # Tokenize text using spaCy's blank model
+            entities = [(ent.text, ent.label_) for ent in doc.ents]  # No named entity recognition (NER)
+            sentiment = TextBlob(text).sentiment.polarity  # Sentiment analysis
 
             entity_results.append(entities)
             sentiment_results.append(sentiment)
@@ -66,3 +55,4 @@ if uploaded_file:
         st.download_button("Download Processed Data", csv_data, "airbnb_nlp_results.csv", "text/csv")
 
 st.write("Upload an Airbnb dataset with textual property descriptions to analyze entities and sentiment!")
+
