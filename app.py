@@ -54,4 +54,4 @@ if uploaded_file:
 
 st.write("Upload an Airbnb dataset with textual property descriptions to analyze entities and sentiment!")
 
-!pip install streamlit
+pip install streamlit
