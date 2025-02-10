@@ -10,13 +10,18 @@ Original file is located at
 import streamlit as st
 import pandas as pd
 import spacy
+import textblob
 from textblob import TextBlob
 
-# Load spaCy model (assumes it's preinstalled)
-try:
-    nlp = spacy.load("en_core_web_sm")
-except OSError:
-    st.error("Error: spaCy model 'en_core_web_sm' is missing. Ensure it is installed in requirements.txt.")
+# Function to download and load spaCy model
+def load_spacy_model():
+    try:
+        return spacy.load("en_core_web_sm")
+    except OSError:
+        st.warning("Downloading missing spaCy model. This may take a moment...")
+        from spacy.cli import download
+        download("en_core_web_sm")
+        return spacy.load("en_core_web_sm")
 
 # Streamlit App
 st.title("Airbnb Listing NLP Analyzer")
@@ -34,6 +39,9 @@ if uploaded_file:
         text_column = "description"
     else:
         text_column = st.selectbox("Select the column with property descriptions", df.columns)
+
+    # Load spaCy model after file upload
+    nlp = load_spacy_model()
 
     # Process descriptions
     if st.button("Analyze Descriptions"):
