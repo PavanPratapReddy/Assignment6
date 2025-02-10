@@ -10,10 +10,15 @@ Original file is located at
 import streamlit as st
 import pandas as pd
 import spacy
+import subprocess
 from textblob import TextBlob
 
-# Load spaCy model
-nlp = spacy.load("en_core_web_sm")
+# Ensure the spaCy model is available
+try:
+    nlp = spacy.load("en_core_web_sm")
+except OSError:
+    subprocess.run(["python", "-m", "spacy", "download", "en_core_web_sm"])
+    nlp = spacy.load("en_core_web_sm")
 
 # Streamlit App
 st.title("Airbnb Listing NLP Analyzer")
@@ -49,7 +54,8 @@ if uploaded_file:
         st.dataframe(df)
 
         # Option to download results
-        df.to_csv("airbnb_nlp_results.csv", index=False)
-        st.download_button("Download Processed Data", "airbnb_nlp_results.csv")
+        csv_data = df.to_csv(index=False).encode('utf-8')
+        st.download_button("Download Processed Data", csv_data, "airbnb_nlp_results.csv", "text/csv")
 
 st.write("Upload an Airbnb dataset with textual property descriptions to analyze entities and sentiment!")
+
